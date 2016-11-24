@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>neighborhood map</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="options-box">
+      <h1></h1>
+      <input type="text" data-bind="textInput: query">
+      <ul class="spotList" data-bind="foreach: filterItem">
+        <ul class='spot' data-bind="text: $data.title"></ul>
+      </ul>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZ026_CfNE99A-g2rFqgY9ObeIomvIa1E&v=3">
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
