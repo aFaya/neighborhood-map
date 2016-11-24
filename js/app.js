@@ -19,23 +19,58 @@
                    ];
 
   // represents one spot.
-  var Spot = function(title, lat, lng) {
+  var Spot = function(title, location) {
     this.title = ko.observable(title);
-    this.lat = ko.observable(lat);
-    this.lng = ko.observable(lng);
-    // this.location = location;
+    this.location = ko.observable(location);
   };
 
   var ViewModel = function() {
 
-    // initial markers.
-    function initMarker() {
+    // pop out the infowindow
+    function populateInfoWindow(marker, inforwindow) {
+      if(inforwindow.marker != marker) {
+        inforwindow.marker = marker;
+        inforwindow.setContent('<div>' + marker.title + '</div>');
+        inforwindow.open(map,marker);
 
+        inforwindow.addListener('closeclick', function() {
+          inforwindow.marker = null;
+        });
+      }
+    }
+
+    this.spots = ko.observableArray(locations.map(function(spot) {
+      return new Spot(spot.title, spot.location);
+    }));
+    this.query = ko.observable('');
+
+    var self = this;
+
+    self.filterItem = ko.computed(function(){
+      var filter = self.query().toLowerCase();
+      if(!filter) {
+        var filtered =  self.spots();
+      }else {
+        filtered = ko.utils.arrayFilter(self.spots(), function(item){
+          return item.title().toLowerCase().indexOf(filter) !== -1;
+        });
+      }
+      return filtered;
+    });
+
+    // function resetMarker() {
+    self.resetMarker = ko.computed(function(){
       var largeInfoWindow = new google.maps.InfoWindow();
+
+      // if markers exit, remove them and reload.
+      if(markers.length !== 0) {
+        removeMarker();
+      }
+
       // create markers.
-      for(var i = 0; i < locations.length; i++) {
-        var title = locations[i].title;
-        var position = locations[i].location;
+      for(var i = 0; i < self.filterItem().length; i++) {
+        var title = self.filterItem()[i].title();
+        var position = self.filterItem()[i].location();
         var marker = new google.maps.Marker({
           position: position,
           title: title,
@@ -55,52 +90,20 @@
         bounds.extend(markers[i].position);
       }
       map.fitBounds(bounds);
-    }
-
-    // pop out the infowindow
-    function populateInfoWindow(marker, inforwindow) {
-      if(inforwindow.marker != marker) {
-        inforwindow.marker = marker;
-        inforwindow.setContent('<div>' + marker.title + '</div>');
-        inforwindow.open(map,marker);
-
-        inforwindow.addListener('closeclick', function() {
-          inforwindow.marker = null;
-        });
-      }
-    }
-
-    this.spots = ko.observableArray(locations.map(function(spot) {
-      return new Spot(spot.title, spot.location.lat, spot.location.lng);
-    }));
-
-    this.query = ko.observable('');
-
-    var self = this;
-
-    self.filterItem = ko.computed(function(){
-      var filter = self.query().toLowerCase();
-      if(!filter) {
-        console.log(self.spots().length);
-        return self.spots();
-      }else {
-        return ko.utils.arrayFilter(self.spots(), function(item){
-          return item.title().toLowerCase().indexOf(filter) !== -1;
-        });
-      }
     });
 
+    // remove markers from the map.
+    function removeMarker() {
+      for(var i = 0; i < markers.length; i++) {
+        markers[i].setMap(null);
+      }
+      markers = [];
+    }
 
-
-    initMarker();
-
-
+    self.resetMarker();
 
   };
   initMap();
   ko.applyBindings( new ViewModel() );
 
-
 })();
-
-
