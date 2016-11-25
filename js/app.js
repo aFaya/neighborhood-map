@@ -14,14 +14,14 @@
   }
 
   var markers = [];
-  var locations = [{'title': 'Window of the World', 'location': {lat: 22.536818, lng: 113.974514}, 'id':0},
-                   {'title': 'Coastal City', 'location': {lat: 22.517115, lng: 113.936844}, 'id':1},
-                   {'title': 'Dayouli Restaurant', 'location': {lat: 22.51841, lng: 114.06416}, 'id':2},
-                   {'title': 'Coco Park', 'location': {lat: 22.534206, lng: 114.053701}, 'id': 3},
-                   {'title': 'Da Mei Sha', 'location': {lat: 22.594822, lng: 114.304446}, 'id': 4}];
+  var locations = [{'title': 'Window of the World', 'location': {lat: 22.536818, lng: 113.974514}, 'id':0, 'venueId': '4d203115b69c6dcb3af96d95'},
+                   {'title': 'Coastal City', 'location': {lat: 22.517115, lng: 113.936844}, 'id':1, 'venueId': '4b8fb877f964a520bb5e33e3'},
+                   {'title': 'Happy Valley', 'location': {lat: 22.539592, lng: 113.980597}, 'id':2, 'venueId': '511b3e18e4b09fc6487af493'},
+                   {'title': 'Coco Park', 'location': {lat: 22.534206, lng: 114.053701}, 'id': 3, 'venueId': '4e1198e8fa769d21e9ee3f9c'},
+                   {'title': 'Da Mei Sha', 'location': {lat: 22.594822, lng: 114.304446}, 'id': 4, 'venueId': '4d3898a740eb2c0fb40a25fe'}];
 
   // represents one spot.
-  var Spot = function(title, location, id) {
+  var Spot = function(title, location, id, venueId) {
     var self = this;
     this.title = ko.observable(title);
     this.location = ko.observable(location);
@@ -37,10 +37,31 @@
                      '&key=AIzaSyBZ026_CfNE99A-g2rFqgY9ObeIomvIa1E';
 
     $.getJSON( addressURL, function( data ) {
-        self.address = data.results[0].formatted_address;
+      self.address = data.results[0].formatted_address;
     }).fail(function(e){
-        self.address = 'Can not get the address.';
+      self.address = 'Can not get the address.';
     });
+
+    this.venueId = venueId;
+    var foursquareURL = 'https://api.foursquare.com/v2/venues/' + venueId +
+                        '?client_id=PCQI3LMM5Q3X5JNX2THXJE0A5DKRKCKAF2U3MBKUIXLB3LR0&' +
+                        'client_secret=A1LL13CINSJ0HHM1SLWJYALQNNKNZZ5KRYCBICFOLVOGXVAU&v=20161125';
+    $.getJSON( foursquareURL, function(data) {
+      self.likes = data.response.venue.likes.count;
+      self.rating = data.response.venue.rating;
+      // if(data.response.venue.tips.groups[0].items >= 2){
+      //   self.tips = data.response.venue.tips.groups[0].items.slice(0,2);
+      // }else{
+      //   self.tips = ['no comment','no comment'];
+      // }
+      var items = data.response.venue.tips.groups[0].items;
+      // self.tips = data.response.venue.tips.groups[0].items.slice(0,2);
+      self.tips = items.length >= 2 ? items : undefined;
+    }).fail(function(e){
+      self.likes = 0;
+      self.rating = 0;
+      self.tips = ['no comment','no comment'];
+    })
 
   };
 
@@ -55,7 +76,7 @@
 
     // create new spot list.
     this.spots = ko.observableArray(locations.map(function(spot) {
-      return new Spot(spot.title, spot.location, spot.id);
+      return new Spot(spot.title, spot.location, spot.id, spot.venueId);
     }));
 
     // query input.
@@ -167,9 +188,6 @@
       if(inforwindow.marker != spot.marker) {
         inforwindow.setContent('');
         inforwindow.marker = spot.marker;
-        // inforwindow.setContent('<h3>Name: <span>' + spot.marker.title + '</span></h3>' +
-        //                        '<h3>Address: <span>' + spot.address + '</span></h3>' +
-        //                        '<div id="pana"></div>');
 
         inforwindow.addListener('closeclick', function() {
           inforwindow.marker = null;
@@ -187,7 +205,11 @@
               nearStreetViewLocation, spot.marker.position);
               inforwindow.setContent('<h3>Name: <span>' + spot.marker.title + '</span></h3>' +
                                      '<h3>Address: <span>' + spot.address + '</span></h3>' +
-                                     '<div id="pano"></div>');
+                                     '<div id="pano"></div>' +
+                                     '<div><h3>Foursquare Likes: <span>' + spot.likes + '</span></h3>' +
+                                     '<h3>Foursquare Rating: <span>' + spot.rating + '</span></h3>' +
+                                     '<h3>Foursquare Tips: </h3><p>1. ' + spot.tips[0].text + ' ---- ' + spot.tips[0].user.firstName + '</p>' +
+                                     '<p>2. ' + spot.tips[1].text + ' ---- ' + spot.tips[1].user.firstName + '</p>' + '</div>');
               var panoramaOptions = {
                 position: nearStreetViewLocation,
                 pov: {
@@ -200,7 +222,11 @@
           } else {
             inforwindow.setContent('<h3>Name: <span>' + spot.marker.title + '</span></h3>' +
                                    '<h3>Address: <span>' + spot.address + '</span></h3>' +
-                                   '<div>No Street View Found</div>');
+                                   '<div>No Street View Found</div>' +
+                                   '<div><h3>Foursquare Likes: <span>' + spot.likes + '</span></h3>' +
+                                   '<h3>Foursquare Rating: <span>' + spot.rating + '</span></h3>' +
+                                   '<h3>Foursquare Tips: </h3><p>1. ' + spot.tips[0].text + ' ---- ' + spot.tips[0].user.firstName + '</p>' +
+                                   '<p>2. ' + spot.tips[1].text + ' ---- ' + spot.tips[1].user.firstName + '</p>' + '</div>');
           }
         }
         // Use streetview service to get the closest streetview image within
