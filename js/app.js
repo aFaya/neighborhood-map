@@ -3,7 +3,7 @@
 (function() {
 
   var map;
-  var marker;
+  // var marker;
 
   // initial map on the screen.
   function initMap() {
@@ -15,13 +15,14 @@
 
   var markers = [];
   var locations = [{'title': 'Window of the World', 'location': {lat: 22.536818, lng: 113.974514}, 'id':0},
-                   {'title': 'Coast City', 'location': {lat: 22.517115, lng: 113.936844}, 'id':1},
+                   {'title': 'Coastal City', 'location': {lat: 22.517115, lng: 113.936844}, 'id':1},
                    {'title': 'Dayouli Restaurant', 'location': {lat: 22.51841, lng: 114.06416}, 'id':2},
                    {'title': 'Coco Park', 'location': {lat: 22.534206, lng: 114.053701}, 'id': 3},
                    {'title': 'Da Mei Sha', 'location': {lat: 22.594822, lng: 114.304446}, 'id': 4}];
 
   // represents one spot.
   var Spot = function(title, location, id) {
+    var self = this;
     this.title = ko.observable(title);
     this.location = ko.observable(location);
     this.marker = new google.maps.Marker({
@@ -30,55 +31,59 @@
           animation: google.maps.Animation.DROP,
           id: id
         });
+    this.address = '';
+    var addressURL = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' +
+                     location.lat + ',' + location.lng +
+                     '&key=AIzaSyBZ026_CfNE99A-g2rFqgY9ObeIomvIa1E';
+
+    $.getJSON( addressURL, function( data ) {
+        self.address = data.results[0].formatted_address;
+    }).fail(function(e){
+        self.address = 'Can not get the address.';
+    });
+
   };
 
 
   var ViewModel = function() {
 
-    var largeInfoWindow = new google.maps.InfoWindow();
+    var largeInfoWindow = new google.maps.InfoWindow({
+      maxWidth: 200
+    });
 
-    // pop out the infowindow
-    function populateInfoWindow(marker, inforwindow) {
-      if(inforwindow.marker != marker) {
-        inforwindow.marker = marker;
-        inforwindow.setContent('<div>' + marker.title + '</div>');
-        inforwindow.open(map,marker);
 
-        inforwindow.addListener('closeclick', function() {
-          inforwindow.marker = null;
-        });
-      }
-    }
 
+    // create new spot list.
     this.spots = ko.observableArray(locations.map(function(spot) {
       return new Spot(spot.title, spot.location, spot.id);
     }));
+
+    // query input.
     this.query = ko.observable('');
 
     var self = this;
 
+    // filter the list items by query.
     self.filterItem = ko.computed(function(){
       var filter = self.query().toLowerCase();
       if(!filter) {
-        var filtered =  self.spots();
+        return self.spots();
       }else {
-        filtered = ko.utils.arrayFilter(self.spots(), function(item){
+        return ko.utils.arrayFilter(self.spots(), function(item){
           return item.title().toLowerCase().indexOf(filter) !== -1;
         });
       }
-      return filtered;
     });
 
-    // list items click eventlistener.
-
+    // reset markers in the beginning and when users filter the items.
     self.resetMarker = ko.computed(function(){
 
       // if markers exit, remove them.
       if(markers.length !== 0) {
         removeMarker();
       }
-
-      // create markers.
+      console.log(self.filterItem());
+      // iterate througth the filterItem and repaint them into the map.
       for(var i = 0; i < self.filterItem().length; i++) {
         // var title = self.filterItem()[i].title();
         // var position = self.filterItem()[i].location();
@@ -93,12 +98,23 @@
         //   populateInfoWindow(this, largeInfoWindow);
         // });
         // markers.push(marker);
+        console.log(self.filterItem()[i]);
+        var marker = self.filterItem()[i].marker;
+        marker.addListener('click', function(index) {
+          return function() {
+            toggleBounce(this);
+            // console.log(self.filterItem()[index]);
+            populateInfoWindow(self.filterItem()[index], largeInfoWindow);
+          };
+        }(i));
 
-        marker = self.filterItem()[i].marker;
-        marker.addListener('click', function() {
-          toggleBounce(this);
-          populateInfoWindow(this, largeInfoWindow);
-        });
+        // marker.addListener('click', function(){
+        //   // console.log(self.filterItem()[index]);
+        //   toggleBounce(this);
+        //   console.log(this);
+        //   console.log(marker);
+        //   populateInfoWindow(this, largeInfoWindow);
+        // });
         markers.push(marker);
       }
 
@@ -120,11 +136,13 @@
     });
 
     // click list item, focus on the relative marker.
+    // first parameter is the current item clicked --- knockoutjs.
     self.focusMarker = function(spot) {
       toggleBounce(spot.marker);
-      populateInfoWindow(spot.marker, largeInfoWindow);
+      populateInfoWindow(spot, largeInfoWindow);
     };
 
+    // add animation when clicking marker.
     function toggleBounce(marker) {
       if(marker.getAnimation() !== null) {
         marker.setAnimation(null);
@@ -137,13 +155,67 @@
     function removeMarker() {
       for(var i = 0; i < markers.length; i++) {
         markers[i].setMap(null);
+        // remove marker listener.
+        google.maps.event.clearListeners(markers[i], 'click');
       }
       markers = [];
+    }
+
+    // pop out the infowindow
+    function populateInfoWindow(spot, inforwindow) {
+      // console.log(spot.address);
+      if(inforwindow.marker != spot.marker) {
+        inforwindow.setContent('');
+        inforwindow.marker = spot.marker;
+        // inforwindow.setContent('<h3>Name: <span>' + spot.marker.title + '</span></h3>' +
+        //                        '<h3>Address: <span>' + spot.address + '</span></h3>' +
+        //                        '<div id="pana"></div>');
+
+        inforwindow.addListener('closeclick', function() {
+          inforwindow.marker = null;
+        });
+
+        var streetViewService = new google.maps.StreetViewService();
+        var radius = 50;
+        // In case the status is OK, which means the pano was found, compute the
+        // position of the streetview image, then calculate the heading, then get a
+        // panorama from that and set the options
+        function getStreetView(data, status) {
+          if (status == google.maps.StreetViewStatus.OK) {
+            var nearStreetViewLocation = data.location.latLng;
+            var heading = google.maps.geometry.spherical.computeHeading(
+              nearStreetViewLocation, spot.marker.position);
+              inforwindow.setContent('<h3>Name: <span>' + spot.marker.title + '</span></h3>' +
+                                     '<h3>Address: <span>' + spot.address + '</span></h3>' +
+                                     '<div id="pano"></div>');
+              var panoramaOptions = {
+                position: nearStreetViewLocation,
+                pov: {
+                  heading: heading,
+                  pitch: 30
+                }
+              };
+            var panorama = new google.maps.StreetViewPanorama(
+              document.getElementById('pano'), panoramaOptions);
+          } else {
+            inforwindow.setContent('<h3>Name: <span>' + spot.marker.title + '</span></h3>' +
+                                   '<h3>Address: <span>' + spot.address + '</span></h3>' +
+                                   '<div>No Street View Found</div>');
+          }
+        }
+        // Use streetview service to get the closest streetview image within
+        // 50 meters of the spot.markers position
+        streetViewService.getPanoramaByLocation(spot.marker.position, radius, getStreetView);
+
+        inforwindow.open(map,spot.marker);
+
+      }
     }
 
     self.resetMarker();
 
   };
+
   initMap();
   ko.applyBindings( new ViewModel() );
 
