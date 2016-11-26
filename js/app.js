@@ -3,8 +3,8 @@
 (function() {
 
   var map;
-  // var marker;
   var bounds;
+  var markers = [];
 
   // initial map on the screen.
   function initMap() {
@@ -14,7 +14,7 @@
     });
   }
 
-  var markers = [];
+
   var locations = [{'title': 'Window of the World', 'location': {lat: 22.536818, lng: 113.974514}, 'id':0, 'venueId': '4d203115b69c6dcb3af96d95'},
                    {'title': 'Coastal City', 'location': {lat: 22.517115, lng: 113.936844}, 'id':1, 'venueId': '4b8fb877f964a520bb5e33e3'},
                    {'title': 'Happy Valley', 'location': {lat: 22.539592, lng: 113.980597}, 'id':2, 'venueId': '511b3e18e4b09fc6487af493'},
@@ -63,11 +63,10 @@
 
   var ViewModel = function() {
 
+    // define inforwindow.
     var largeInfoWindow = new google.maps.InfoWindow({
       maxWidth: 200
     });
-
-
 
     // create new spot list.
     this.spots = ko.observableArray(locations.map(function(spot) {
