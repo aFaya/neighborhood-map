@@ -56,7 +56,7 @@
       self.likes = 0;
       self.rating = 0;
       self.tips = ['no comment','no comment'];
-    })
+    });
 
   };
 
@@ -112,9 +112,9 @@
 
       // place the markers in the map.
       bounds = new google.maps.LatLngBounds();
-      for(var i = 0; i < markers.length; i++) {
-        markers[i].setMap(map);
-        bounds.extend(markers[i].position);
+      for(var j = 0; j < markers.length; j++) {
+        markers[j].setMap(map);
+        bounds.extend(markers[j].position);
       }
       map.fitBounds(bounds);
     });
