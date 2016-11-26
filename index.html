@@ -2,21 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>neighborhood map</title>
-  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" media="(max-width: 670px)" href="css/responsive.css">
 </head>
 <body>
   <div class="container">
     <div class="options-box">
-      <h1></h1>
-      <input type="text" data-bind="textInput: query">
+      <h1>Shenzhen hot spots</h1>
+      <input type="text" data-bind="textInput: query" placeholder="Search spots">
       <ul class="spotList" data-bind="foreach: filterItem">
         <a  href="#" data-bind="click: $parent.focusMarker">
           <ul class='spot' data-bind="text: $data.title"></ul>
         </a>
-        <!-- <a><ul>haha</ul></a> -->
       </ul>
     </div>
+    <a id="menu" class="header__menu">
+      <img src="images/back.svg" alt="" class="header__menu">
+    </a>
     <div id="map"></div>
   </div>
 

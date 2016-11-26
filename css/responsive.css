@@ -1,0 +1,8 @@
+@media screen and (max-width: 670px) {
+    .options-box {
+        display: none;
+    }
+    #map {
+        left:0;
+    }
+}

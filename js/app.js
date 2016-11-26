@@ -4,12 +4,13 @@
 
   var map;
   // var marker;
+  var bounds;
 
   // initial map on the screen.
   function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
       center: {lat: 22.543096, lng: 114.057865},
-      zoom: 13
+      zoom: 8
     });
   }
 
@@ -42,18 +43,12 @@
       self.address = 'Can not get the address.';
     });
 
-    this.venueId = venueId;
     var foursquareURL = 'https://api.foursquare.com/v2/venues/' + venueId +
                         '?client_id=PCQI3LMM5Q3X5JNX2THXJE0A5DKRKCKAF2U3MBKUIXLB3LR0&' +
                         'client_secret=A1LL13CINSJ0HHM1SLWJYALQNNKNZZ5KRYCBICFOLVOGXVAU&v=20161125';
     $.getJSON( foursquareURL, function(data) {
       self.likes = data.response.venue.likes.count;
       self.rating = data.response.venue.rating;
-      // if(data.response.venue.tips.groups[0].items >= 2){
-      //   self.tips = data.response.venue.tips.groups[0].items.slice(0,2);
-      // }else{
-      //   self.tips = ['no comment','no comment'];
-      // }
       var items = data.response.venue.tips.groups[0].items;
       // self.tips = data.response.venue.tips.groups[0].items.slice(0,2);
       self.tips = items.length >= 2 ? items : undefined;
@@ -103,52 +98,21 @@
       if(markers.length !== 0) {
         removeMarker();
       }
-      console.log(self.filterItem());
       // iterate througth the filterItem and repaint them into the map.
       for(var i = 0; i < self.filterItem().length; i++) {
-        // var title = self.filterItem()[i].title();
-        // var position = self.filterItem()[i].location();
-        // marker = new google.maps.Marker({
-        //   position: position,
-        //   title: title,
-        //   animation: google.maps.Animation.DROP,
-        //   id: i
-        // });
-        // marker.addListener('click', function() {
-        //   toggleBounce(this);
-        //   populateInfoWindow(this, largeInfoWindow);
-        // });
-        // markers.push(marker);
-        console.log(self.filterItem()[i]);
         var marker = self.filterItem()[i].marker;
         marker.addListener('click', function(index) {
           return function() {
             toggleBounce(this);
-            // console.log(self.filterItem()[index]);
+            // map.setCenter(marker.getPosition);
             populateInfoWindow(self.filterItem()[index], largeInfoWindow);
           };
         }(i));
-
-        // marker.addListener('click', function(){
-        //   // console.log(self.filterItem()[index]);
-        //   toggleBounce(this);
-        //   console.log(this);
-        //   console.log(marker);
-        //   populateInfoWindow(this, largeInfoWindow);
-        // });
         markers.push(marker);
       }
 
-      // function toggleBounce(marker) {
-      //   if(marker.getAnimation() !== null) {
-      //     marker.setAnimation(null);
-      //   }else {
-      //     marker.setAnimation(google.maps.Animation.BOUNCE);
-      //   }
-      // }
-
       // place the markers in the map.
-      var bounds = new google.maps.LatLngBounds();
+      bounds = new google.maps.LatLngBounds();
       for(var i = 0; i < markers.length; i++) {
         markers[i].setMap(map);
         bounds.extend(markers[i].position);
@@ -170,6 +134,12 @@
       }else {
         marker.setAnimation(google.maps.Animation.BOUNCE);
       }
+      // set other markers animation to null.
+      for(var i = 0; i < markers.length; i++) {
+        if(markers[i] !== marker) {
+          markers[i].setAnimation(null);
+        }
+      }
     }
 
     // remove markers from the map.
@@ -184,7 +154,6 @@
 
     // pop out the infowindow
     function populateInfoWindow(spot, inforwindow) {
-      // console.log(spot.address);
       if(inforwindow.marker != spot.marker) {
         inforwindow.setContent('');
         inforwindow.marker = spot.marker;
@@ -207,7 +176,7 @@
                                      '<h3>Address: <span>' + spot.address + '</span></h3>' +
                                      '<div id="pano"></div>' +
                                      '<div><h3>Foursquare Likes: <span>' + spot.likes + '</span></h3>' +
-                                     '<h3>Foursquare Rating: <span>' + spot.rating + '</span></h3>' +
+                                     '<h3>Foursquare Rating: <span>' + spot.rating + '/10</span></h3>' +
                                      '<h3>Foursquare Tips: </h3><p>1. ' + spot.tips[0].text + ' ---- ' + spot.tips[0].user.firstName + '</p>' +
                                      '<p>2. ' + spot.tips[1].text + ' ---- ' + spot.tips[1].user.firstName + '</p>' + '</div>');
               var panoramaOptions = {
@@ -224,7 +193,7 @@
                                    '<h3>Address: <span>' + spot.address + '</span></h3>' +
                                    '<div>No Street View Found</div>' +
                                    '<div><h3>Foursquare Likes: <span>' + spot.likes + '</span></h3>' +
-                                   '<h3>Foursquare Rating: <span>' + spot.rating + '</span></h3>' +
+                                   '<h3>Foursquare Rating: <span>' + spot.rating + '/10</span></h3>' +
                                    '<h3>Foursquare Tips: </h3><p>1. ' + spot.tips[0].text + ' ---- ' + spot.tips[0].user.firstName + '</p>' +
                                    '<p>2. ' + spot.tips[1].text + ' ---- ' + spot.tips[1].user.firstName + '</p>' + '</div>');
           }
@@ -243,6 +212,12 @@
   };
 
   initMap();
+  var center = ko.observable(map.getCenter());
+  $(window).resize(function() {
+    map.panTo(center());
+    map.fitBounds(bounds);
+  });
+
   ko.applyBindings( new ViewModel() );
 
 })();
