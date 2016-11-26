@@ -33,30 +33,44 @@ var app = app || {};
           id: id
         });
     this.address = '';
-    var addressURL = 'https://aps.googleapis.com/maps/api/geocode/json?latlng=' +
+    var addressURL = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' +
                      location.lat + ',' + location.lng +
                      '&key=AIzaSyBZ026_CfNE99A-g2rFqgY9ObeIomvIa1E';
 
-    $.getJSON( addressURL, function( data ) {
-      self.address = data.results[0].formatted_address;
-    }).fail(function(e){
-      self.address = 'Can not get the address.';
-    });
+    $.getJSON( addressURL, function() {
+      console.log('get marker address success.');
+    }).done(function(data) {
+        self.address = data.results[0].formatted_address;
+      })
+      .fail(function(e){
+        self.address = 'Can not get the address.';
+      });
 
     var foursquareURL = 'https://api.foursquare.com/v2/venues/' + venueId +
                         '?client_id=PCQI3LMM5Q3X5JNX2THXJE0A5DKRKCKAF2U3MBKUIXLB3LR0&' +
                         'client_secret=A1LL13CINSJ0HHM1SLWJYALQNNKNZZ5KRYCBICFOLVOGXVAU&v=20161125';
-    $.getJSON( foursquareURL, function(data) {
-      self.likes = data.response.venue.likes.count;
-      self.rating = data.response.venue.rating;
-      var items = data.response.venue.tips.groups[0].items;
-      // self.tips = data.response.venue.tips.groups[0].items.slice(0,2);
-      self.tips = items.length >= 2 ? items : undefined;
-    }).fail(function(e){
-      self.likes = 0;
-      self.rating = 0;
-      self.tips = ['no comment','no comment'];
-    });
+    $.getJSON( foursquareURL, function() {
+      console.log('get Foursquare infomation success.');
+    }).done(function(data) {
+        self.likes = data.response.venue.likes.count;
+        self.rating = data.response.venue.rating;
+        self.tips = data.response.venue.tips.groups[0].items;
+        self.infoContent = '<div><h3>Foursquare Likes: <span>' + self.likes + '</span></h3>' +
+                           '<h3>Foursquare Rating: <span>' + self.rating + '/10</span></h3>' +
+                           '<h3>Foursquare Tips: </h3>';
+
+        // if there are unless 2 tips, show the first 2 tips in the infowindow,
+        // otherwise, show as much as it has.
+        var len = self.tips.length >= 2 ? 2 : self.tips.length;
+        for(var i = 0; i < len; i++) {
+          self.infoContent += '<p>' + i + '.' + self.tips[i].text + ' ---- ' + self.tips[i].user.firstName + '</p>';
+        }
+        self.infoContent += '</div>';
+        console.log(self.infoContent);
+      })
+      .fail(function(e){
+        self.infoContent = '<div><h3>Can not get Foursquare infomation.</h3></div>';
+      });
 
   };
 
@@ -173,11 +187,7 @@ var app = app || {};
               nearStreetViewLocation, spot.marker.position);
               inforwindow.setContent('<h3>Name: <span>' + spot.marker.title + '</span></h3>' +
                                      '<h3>Address: <span>' + spot.address + '</span></h3>' +
-                                     '<div id="pano"></div>' +
-                                     '<div><h3>Foursquare Likes: <span>' + spot.likes + '</span></h3>' +
-                                     '<h3>Foursquare Rating: <span>' + spot.rating + '/10</span></h3>' +
-                                     '<h3>Foursquare Tips: </h3><p>1. ' + spot.tips[0].text + ' ---- ' + spot.tips[0].user.firstName + '</p>' +
-                                     '<p>2. ' + spot.tips[1].text + ' ---- ' + spot.tips[1].user.firstName + '</p>' + '</div>');
+                                     '<div id="pano"></div>' + spot.infoContent);
               var panoramaOptions = {
                 position: nearStreetViewLocation,
                 pov: {
@@ -190,11 +200,7 @@ var app = app || {};
           } else {
             inforwindow.setContent('<h3>Name: <span>' + spot.marker.title + '</span></h3>' +
                                    '<h3>Address: <span>' + spot.address + '</span></h3>' +
-                                   '<div>No Street View Found</div>' +
-                                   '<div><h3>Foursquare Likes: <span>' + spot.likes + '</span></h3>' +
-                                   '<h3>Foursquare Rating: <span>' + spot.rating + '/10</span></h3>' +
-                                   '<h3>Foursquare Tips: </h3><p>1. ' + spot.tips[0].text + ' ---- ' + spot.tips[0].user.firstName + '</p>' +
-                                   '<p>2. ' + spot.tips[1].text + ' ---- ' + spot.tips[1].user.firstName + '</p>' + '</div>');
+                                   '<div>No Street View Found</div>' + spot.infoContent);
           }
         }
         // Use streetview service to get the closest streetview image within
