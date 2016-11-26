@@ -9,7 +9,7 @@
 </head>
 <body>
   <div class="container">
-    <div class="options-box">
+    <aside class="options-box" data-bind="css: {'open': open}">
       <h1>Shenzhen hot spots</h1>
       <input type="text" data-bind="textInput: query" placeholder="Search spots">
       <ul class="spotList" data-bind="foreach: filterItem">
@@ -17,11 +17,11 @@
           <ul class='spot' data-bind="text: $data.title"></ul>
         </a>
       </ul>
-    </div>
-    <a id="menu" class="header__menu">
+    </aside>
+    <a id="menu" class="header__menu" data-bind="click: toggleOpen">
       <img src="images/hambergur.svg" alt="" class="header__menu">
     </a>
-    <div id="map"></div>
+    <main id="map"></main>
   </div>
 
   <script
@@ -34,7 +34,7 @@
   <script async defer
         src="https://maps.googleapis.com/maps/api/js?v=3&key=AIzaSyBZ026_CfNE99A-g2rFqgY9ObeIomvIa1E&callback=app.init" onerror="app.errorHandler()">
   </script>
-  <script>
+<!--   <script>
     var optionsBox = document.getElementsByClassName('options-box')[0];
     var menu = document.getElementById('menu');
 
@@ -42,7 +42,7 @@
       optionsBox.classList.toggle("open");
       e.stopPropagation();
     });
-  </script>
+  </script> -->
 
 </body>
 </html>

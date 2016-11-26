@@ -66,7 +66,6 @@ var app = app || {};
           self.infoContent += '<p>' + i + '.' + self.tips[i].text + ' ---- ' + self.tips[i].user.firstName + '</p>';
         }
         self.infoContent += '</div>';
-        console.log(self.infoContent);
       })
       .fail(function(e){
         self.infoContent = '<div><h3>Can not get Foursquare infomation.</h3></div>';
@@ -214,10 +213,16 @@ var app = app || {};
 
     self.resetMarker();
 
+    // toggle open the sidebar.
+    self.open = ko.observable(false);
+    self.toggleOpen = function() {
+      self.open(!self.open());
+    }
+
   };
 
   app.errorHandler = function() {
-    console.log('can not load map.');
+    document.getElementById('map').innerHTML = 'can not load map, please try again.';
   };
 
   app.init = function() {
