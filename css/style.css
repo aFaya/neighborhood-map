@@ -38,7 +38,6 @@ span {
 }
 
 .options-box {
-    /*position: absolute;*/
     background: #fff;
     border: 1px solid #999;
     border-radius: 3px;
@@ -48,6 +47,8 @@ span {
     text-align: left;
     width: 340px;
 }
+
+
 
 .spotList {
     padding-left: 0;
@@ -59,6 +60,5 @@ span {
 }
 
 .header__menu {
-    width: 32px;
-    position: absolute;
+    display: none;
 }

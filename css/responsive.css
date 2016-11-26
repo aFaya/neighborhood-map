@@ -1,8 +1,24 @@
 @media screen and (max-width: 670px) {
     .options-box {
-        display: none;
+        position: absolute;
+        transform: translate(0,-1000px);
+        transition: transform 0.3s ease;
+        z-index: 10;
+    }
+
+    .options-box.open {
+        -webkit-transform: translate(0, 0);
+         transform: translate(0, 0);
+    }
+
+    .header__menu {
+        z-index: 11;
+        display: inline-block;
+        width: 32px;
+        position: absolute;
     }
     #map {
         left:0;
+        z-index: 0;
     }
 }

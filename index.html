@@ -19,7 +19,7 @@
       </ul>
     </div>
     <a id="menu" class="header__menu">
-      <img src="images/back.svg" alt="" class="header__menu">
+      <img src="images/hambergur.svg" alt="" class="header__menu">
     </a>
     <div id="map"></div>
   </div>
@@ -34,6 +34,15 @@
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    var optionsBox = document.getElementsByClassName('options-box')[0];
+    var menu = document.getElementById('menu');
+
+    menu.addEventListener('click', function(e){
+      optionsBox.classList.toggle("open");
+      e.stopPropagation();
+    });
+  </script>
 
 </body>
 </html>

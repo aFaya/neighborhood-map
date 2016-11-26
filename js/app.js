@@ -212,6 +212,8 @@
   };
 
   initMap();
+
+  // map resiponsive when window resize.
   var center = ko.observable(map.getCenter());
   $(window).resize(function() {
     map.panTo(center());
