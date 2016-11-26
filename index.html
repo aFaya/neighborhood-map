@@ -25,15 +25,15 @@
   </div>
 
   <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZ026_CfNE99A-g2rFqgY9ObeIomvIa1E&v=3">
-  </script>
-  <script
     src="https://code.jquery.com/jquery-3.1.1.min.js"
     integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
     crossorigin="anonymous">
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.1/knockout-min.js"></script>
   <script src="js/app.js"></script>
+  <script async defer
+        src="https://maps.googleapis.com/maps/api/js?v=3&key=AIzaSyBZ026_CfNE99A-g2rFqgY9ObeIomvIa1E&callback=app.init" onerror="app.errorHandler()">
+  </script>
   <script>
     var optionsBox = document.getElementsByClassName('options-box')[0];
     var menu = document.getElementById('menu');

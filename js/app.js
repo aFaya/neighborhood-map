@@ -1,7 +1,7 @@
-'use strict';
+var app = app || {};
 
 (function() {
-
+  'use strict';
   var map;
   var bounds;
   var markers = [];
@@ -33,7 +33,7 @@
           id: id
         });
     this.address = '';
-    var addressURL = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' +
+    var addressURL = 'https://aps.googleapis.com/maps/api/geocode/json?latlng=' +
                      location.lat + ',' + location.lng +
                      '&key=AIzaSyBZ026_CfNE99A-g2rFqgY9ObeIomvIa1E';
 
@@ -210,15 +210,26 @@
 
   };
 
-  initMap();
+  app.errorHandler = function() {
+    console.log('can not load map.');
+  };
+
+  app.init = function() {
+    initMap();
+    ko.applyBindings( new ViewModel() );
+  }
+
 
   // map resiponsive when window resize.
-  var center = ko.observable(map.getCenter());
+
   $(window).resize(function() {
+    var center = ko.observable(map.getCenter());
     map.panTo(center());
     map.fitBounds(bounds);
   });
 
-  ko.applyBindings( new ViewModel() );
+
+
+
 
 })();
